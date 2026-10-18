@@ -1,0 +1,17 @@
+# Runtime settings may contain personal paths or credentials.
+/config.json
+/config.json.tmp
+.env
+.env.*
+!.env.example
+logs/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+*.log
+*.zip
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,8 @@
+{
+  "name": "zeroscript-chatgpt-fix",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node zeroscript-extension/test-chatgpt.js && node zeroscript-extension/test-parser.js"
+  }
+}
