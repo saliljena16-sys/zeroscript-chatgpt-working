@@ -1,0 +1,58 @@
+--- a/zeroscript-extension/providers/chatgpt.js
++++ b/zeroscript-extension/providers/chatgpt.js
+@@ -67,10 +67,14 @@
+     userRole: "user",
+     assistantRole: "assistant",
+     reply: ".markdown",
+-    editor: "#prompt-textarea",
++    // October 2026: the live ProseMirror has no id. Match semantic composer
++    // attributes, including contenteditable="false" while ZeroScript locks it.
++    editor: "#prompt-textarea, [data-composer-markdown].ProseMirror[contenteditable], [data-chatgpt-composer] .ProseMirror[contenteditable], [data-composer-input] .ProseMirror[contenteditable]",
+     // The ONE submit control; its data-testid says whether it is currently a
+     // send or a stop button (see isStopBtn). Id first - it survives testid churn.
+-    submitBtn: "#composer-submit-button, button[data-testid='send-button'], button[data-testid='stop-button']",
++    // The new English UI also drops the submit id/testid. Only accept the
++    // observed Send control here; do not mistake an unlabelled Stop for Send.
++    submitBtn: "#composer-submit-button, button[data-testid='send-button'], button[data-testid='stop-button'], [data-chatgpt-composer] button[type='submit'][aria-label='Send']",
+     // Kept for installSendHooks, which needs to recognise a click on the native
+     // stop control wherever it lives.
+     stopBtn: "button[data-testid='stop-button']",
+@@ -221,7 +225,9 @@
+   const assistantItems = () => allItems().filter(isAssistantItem);
+   const assistantCount = () => assistantItems().length;
+   const userCount = () => allItems().filter(isUserItem).length;
+-  const getEditor = () => document.querySelector(S.editor);
++  const getEditor = () => [...document.querySelectorAll(S.editor)].find((ed) =>
++    ed.getClientRects().length && ed.getBoundingClientRect().width > 0
++  ) || null;
+   const editorText = () => {
+     const e = getEditor();
+     return e ? e.textContent || "" : "";
+@@ -267,7 +273,7 @@
+   const coverTarget = () => {
+     const ed = getEditor();
+     if (!ed) return null;
+-    return ed.closest("[class*='prosemirror-parent']") || ed;
++    return ed.closest("[data-composer-input-layout], [class*='prosemirror-parent']") || ed;
+   };
+ 
+   // Where the ZeroScript bar lives: INSIDE the rounded composer surface (the
+@@ -309,6 +315,9 @@
+     const ed = getEditor();
+     if (!ed) return null;
+     const box = ed.closest("[class*='composer-surface']");
++    // Modern ComposerLayoutInput/ComposerLayoutRoot uses a different layout.
++    // Let core/main.js place the floating bar above the detected editor instead
++    // of injecting an unknown grid area into React's composer.
+     if (!box) return null;
+     const area = topArea(box);
+     if (area) {
+@@ -944,7 +953,7 @@
+       if (d) diag = d;
+       // Version beacon: stamp the loaded build onto <html> so a reload can be
+       // confirmed from the page (read document.documentElement.dataset.zsGptVer).
+-      try { document.documentElement.setAttribute("data-zs-gpt-ver", "2026-08-13_cmtap+toolkey"); } catch {}
++      try { document.documentElement.setAttribute("data-zs-gpt-ver", "2026-10-18_composer-selectors"); } catch {}
+     },
+     // turns
+     allItems, isUserItem, isAssistantItem, itemText, classifyText,
